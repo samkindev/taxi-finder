@@ -19,6 +19,7 @@ export default function MainPage() {
     const driver = useSelector(getCurrentDriver);
     useEffect(() => {
         const unsub = subscibeDriver(driver.vehiculeId, (l, err, res) => {
+            console.log(l, err);
             if (res) {
                 if (res.length === 1) {
                     setNewCommand(true);
