@@ -1,9 +1,30 @@
-import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Typography, Avatar } from '@mui/material';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Typography, Avatar, CircularProgress, Button } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../firebase/api/user';
+import { actions } from '../reducers/user';
+import { Box } from '@mui/system';
 
 export default function ClientAppBar() {
+    const [deconnecting, setDeconnecting] = useState(false);
+
+    const dispatch = useDispatch();
+    const handleDeconnection = () => {
+        logoutUser((l, err, res) => {
+            setDeconnecting(l);
+            console.log(res);
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            if (res) {
+                dispatch(actions.disconnectUser());
+            }
+        });
+    };
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -12,19 +33,27 @@ export default function ClientAppBar() {
                     <Typography variant="h4" className={classes.logo}>Logo</Typography>
                 </Link>
                 <menu>
-                    <NavLink to="/">
-                        <Typography variant="navLink">Historique</Typography>
-                    </NavLink>
-                    <NavLink to="/">
-                        <Typography variant="navLink">Comment ça marche</Typography>
-                    </NavLink>
-                    <Avatar
-                        style={{
-                            width: 30,
-                            height: 30,
-                            fontSize: '0.8rem'
-                        }}
-                    >S</Avatar>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Button
+                            variant="text"
+                            color="default"
+                            size="small"
+                            onClick={handleDeconnection}
+                            sx={{ marginRight: 1 }}
+                        >
+                            {deconnecting ?
+                                <CircularProgress size={12} color="default" /> :
+                                'Decconexion'
+                            }
+                        </Button>
+                        <Avatar
+                            style={{
+                                width: 30,
+                                height: 30,
+                                fontSize: '0.8rem'
+                            }}
+                        >S</Avatar>
+                    </Box>
                 </menu>
             </div>
         </div>

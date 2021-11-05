@@ -1,28 +1,64 @@
-import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Typography, Avatar, IconButton } from '@mui/material';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Avatar, Button, CircularProgress, IconButton } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import { Box } from '@mui/system';
 import { Notifications } from '@mui/icons-material';
+import { Logo } from '../../components';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../firebase/api/user';
+import { actions } from '../reducers/user';
 
 export default function ChauffeurAppBar({ user }) {
+    const [deconnecting, setDeconnecting] = useState(false);
+
+    const dispatch = useDispatch();
+    const handleDeconnection = () => {
+        logoutUser((l, err, res) => {
+            setDeconnecting(l);
+            console.log(res);
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            if (res) {
+                dispatch(actions.disconnectUser());
+            }
+        });
+    };
     const classes = useStyles();
     return (
         <div className={classes.root}>
             <div className={classes.toolBar}>
                 <Link to="/" className={classes.logoContainer}>
-                    <Typography variant="h4" className={classes.logo}>Logo</Typography>
+                    <Logo width={80} />
                 </Link>
                 <menu>
                     <IconButton>
                         <Notifications fontSize="medium" />
                     </IconButton>
-                    <Avatar
-                        style={{
-                            width: 30,
-                            height: 30,
-                            fontSize: '0.8rem'
-                        }}
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Button
+                            variant="text"
+                            color="default"
+                            size="small"
+                            onClick={handleDeconnection}
+                            sx={{ marginRight: 1 }}
+                        >
+                            {deconnecting ?
+                                <CircularProgress size={12} color="default" /> :
+                                'Decconexion'
+                            }
+                        </Button>
+                        <Avatar
+                            style={{
+                                width: 30,
+                                height: 30,
+                                fontSize: '0.8rem'
+                            }}
+                        />
+                    </Box>
                 </menu>
             </div>
         </div>

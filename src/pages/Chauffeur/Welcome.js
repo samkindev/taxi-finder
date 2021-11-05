@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@mui/styles';
 import { useSelector, useDispatch } from 'react-redux';
@@ -7,14 +7,20 @@ import { Box } from '@mui/system';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import globalStyles from '../../styles/globalStyles';
 import { Link } from 'react-router-dom';
-import { createDriverAccount } from '../../app/firebase/api/user';
+import { createDriverAccount, updateDriver } from '../../app/firebase/api/user';
 import models from '../../app/firebase/api/models';
 import { getUser } from '../../app/reducers/user';
-import { actions } from '../../app/reducers/driver';
+import { actions, getCurrentDriver } from '../../app/reducers/driver';
+import { AutocompleteInput } from '../../components';
+import { getAll } from '../../app/firebase/api/itineraire';
+import { createVehicule } from '../../app/firebase/api/vehicule';
 
 export default function WelcomeChauffeur() {
     const user = useSelector(getUser);
-    const [step, setStep] = useState(0);
+    const chauffeur = useSelector(getCurrentDriver);
+    const [permi, setPermi] = useState('');
+    const [step, setStep] = useState(chauffeur ? 1 : 0);
+    const [terms, setTerms] = useState([]);
     const [itineraire, setItineraire] = useState({
         depart: '',
         terminus: ''
@@ -24,19 +30,60 @@ export default function WelcomeChauffeur() {
     const [marque, setmarque] = useState('');
     const [plaque, setPlaque] = useState('');
     const [loading, setLoading] = useState(false);
+    const [vLoading, setVLoading] = useState(false);
 
     const dispatch = useDispatch();
+    const submitVehicule = () => {
+        console.log(chauffeur);
+        if (chauffeur !== null && user !== null && typeTaxi !== "" && marque !== "" && couleur !== "" && plaque !== "" && itineraire.depart !== "" && itineraire.terminus !== "") {
+            const vehicule = new models.Vehicule(
+                chauffeur.id,
+                `${user.prenom} ${user.nom}`,
+                typeTaxi,
+                marque,
+                couleur,
+                plaque,
+                null,
+                itineraire.depart,
+                itineraire.terminus,
+                null
+            );
+
+            createVehicule(vehicule, (l, err, res) => {
+                setVLoading(l);
+
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                if (res) {
+                    updateDriver(chauffeur.id, {
+                        vehiculeId: res.id,
+                        typeTaxi: res.type,
+                        depart: res.depart,
+                        terminus: res.terminus
+                    }, (l, err, res) => {
+                        if (err) {
+                            console.log(err);
+                        }
+
+                        if (res) {
+                            dispatch(actions.setDriver({ driver: res }));
+                        }
+                    });
+
+                }
+            });
+        }
+    };
+
     const handleSubmit = e => {
         e.preventDefault();
 
-        if (itineraire !== "" && typeTaxi !== "" && couleur !== "" && marque !== "" && plaque !== "" && user) {
-            const taxi = {
-                type: typeTaxi,
-                couleur,
-                marque, plaque
-            };
+        if (permi !== "" && user) {
             const Driver = models.Chauffeur;
-            const d = new Driver(user.id, taxi, null, itineraire);
+            const d = new Driver(user.id, null, "", "", "", "", permi);
             createDriverAccount(d, (l, err, res) => {
                 setLoading(l);
 
@@ -45,20 +92,46 @@ export default function WelcomeChauffeur() {
                     return;
                 }
 
-                dispatch(actions.setDriver({ driver: res }));
+                if (res) {
+                    dispatch(actions.setDriver({ driver: res }));
+                    setStep(step + 1);
+                }
+
             });
         }
     };
 
     const goNext = () => {
-        if (step >= 2) return;
+        if (step >= 3) return;
         setStep(step + 1);
     };
 
     const goBack = () => {
-        if (step <= 0) return;
+        if (step <= 1) return;
         setStep(step - 1);
     };
+
+    useEffect(() => {
+        getAll((l, err, res) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            if (res) {
+                const terms = [];
+                res.forEach(i => {
+                    if (!terms.some(el => el === i.extremite[0])) {
+                        terms.push(i.extremite[0]);
+                    }
+                    if (!terms.some(el => el === i.extremite[1])) {
+                        terms.push(i.extremite[1]);
+                    }
+                });
+                setTerms(terms);
+            }
+        });
+    }, []);
 
     const globalClasses = globalStyles();
     const classes = useStyles();
@@ -69,38 +142,68 @@ export default function WelcomeChauffeur() {
                     <Link to="/" className={classes.logoContainer}>
                         <Typography variant="h4" className={classes.logo}>Logo</Typography>
                     </Link>
-                    <FormBlock title="Bienvenu Sam!" actionTitle="Suivant" goNext={goNext} goBack={goBack} step={step} index={0}>
+                    <FormBlock
+                        title={`Bienvenu ${user.prenom}!`}
+                        actionTitle="Suivant"
+                        goNext={handleSubmit}
+                        goBack={goBack}
+                        loading={loading}
+                        step={step}
+                        index={0}
+                    >
+                        <div className={clsx(classes.blockBody)}>
+                            <Typography variant="h5" sx={{ marginBottom: 2, fontFamily: 'monospace' }}>Création de votre compte chauffeur.</Typography>
+                            <label>
+                                <Typography variant="caption">Permi de conduire</Typography>
+                                <TextField
+                                    color="default"
+                                    fullWidth
+                                    placeholder="Le numéro de votre permi"
+                                    value={permi}
+                                    onChange={e => setPermi(e.target.value)}
+                                    inputProps={{
+                                        sx: {
+                                            padding: "8px 14px"
+                                        }
+                                    }}
+                                    sx={{
+                                        margin: '4px 0',
+                                        marginBottom: 2.3
+                                    }}
+                                />
+                            </label>
+                        </div>
+                    </FormBlock>
+                    <FormBlock
+                        title="Itinéraire"
+                        actionTitle="Suivant"
+                        goNext={goNext}
+                        goBack={goBack}
+                        step={step}
+                        index={1}
+                    >
                         <div className={clsx(classes.blockBody)}>
                             <Typography variant="h5" sx={{ marginBottom: 2, fontFamily: 'monospace' }}>Quel est votre itineraire?</Typography>
-                            <TextField
-                                color="default"
-                                fullWidth
-                                placeholder="Point de depart"
+                            <AutocompleteInput
+                                options={terms}
                                 value={itineraire.depart}
-                                onChange={e => setItineraire(it => ({
-                                    ...it,
-                                    depart: e.target.value
-                                }))}
-                                size="small"
-                                sx={{
-                                    margin: "16px 0"
-                                }}
-
+                                onChange={(val) => setItineraire(it => ({ ...it, depart: val }))}
                             />
-                            <TextField
-                                color="default"
-                                fullWidth
-                                placeholder="Terminus (Fin de votre trajet)"
+                            <AutocompleteInput
+                                options={terms}
                                 value={itineraire.terminus}
-                                onChange={e => setItineraire(it => ({
-                                    ...it,
-                                    terminus: e.target.value
-                                }))}
-                                size="small"
+                                onChange={(val) => setItineraire(it => ({ ...it, terminus: val }))}
                             />
                         </div>
                     </FormBlock>
-                    <FormBlock title="Type de taxi." actionTitle="Suivant" goNext={goNext} goBack={goBack} step={step} index={1}>
+                    <FormBlock
+                        title="Type de taxi."
+                        actionTitle="Suivant"
+                        goNext={goNext}
+                        goBack={goBack}
+                        step={step}
+                        index={2}
+                    >
                         <div className={clsx(classes.blockBody)}>
                             <Typography variant="h5" sx={{ marginBottom: 2, fontFamily: 'monospace' }}>Quel type de taxi conduisez-vou?</Typography>
                             <div className={clsx(globalClasses.centerVerticalFlex)}>
@@ -115,7 +218,14 @@ export default function WelcomeChauffeur() {
                             </div>
                         </div>
                     </FormBlock>
-                    <FormBlock title="Information du véhicule." actionTitle="Enregistrer" loading={loading} goNext={handleSubmit} goBack={goBack} step={step} index={2}>
+                    <FormBlock
+                        title="Information du véhicule."
+                        actionTitle="Enregistrer"
+                        loading={vLoading}
+                        goNext={submitVehicule}
+                        goBack={goBack}
+                        step={step}
+                        index={3}>
                         <div>
                             <label>
                                 <Typography variant="caption">Couleur</Typography>
@@ -245,7 +355,7 @@ const FormBlock = ({ title, goNext, goBack, children, actionTitle, step, index, 
                                 disabled={loading}
                             >
                                 {actionTitle}
-                                {step === 2 ? loading && <CircularProgress color="secondary" size={10} /> : loading ? <CircularProgress /> : <ChevronRight />}
+                                {step === 2 ? loading && <CircularProgress color="secondary" size={10} /> : loading ? <CircularProgress color="secondary" size={10} /> : <ChevronRight />}
                             </Button>
                         </Box>
                     </div>

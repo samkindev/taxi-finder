@@ -5,3 +5,6 @@ export { default as ForbidenRoute } from './protectedRoutes/ForbidenRoute';
 export { default as TaxiCard } from './Client/TaxiCard';
 export { default as NoResult } from './divers/NoResult';
 export { default as NewCommand } from './Chauffeur/NewCommand';
+export { default as AutocompleteInput } from './Inputs/AutoComplete';
+export { default as Map } from './Map';
+export { default as Logo } from './Logo';

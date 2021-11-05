@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Switch, Route, useRouteMatch, useHistory, useParams } from 'react-router-dom';
+import { Switch, Route, useRouteMatch, useHistory, useParams, Link } from 'react-router-dom';
 import { makeStyles } from '@mui/styles';
 import { Button, TextField, Typography, Select, MenuItem, Alert, CircularProgress, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
@@ -8,11 +8,13 @@ import { signupUser, createUtilisateur, getCurrentUser } from '../firebase/api/u
 import models from '../firebase/api/models';
 import { useDispatch } from 'react-redux';
 import { actions } from '../reducers/user';
+import { Logo } from '../../components';
 
 const useStyles = theme => makeStyles({
     root: {
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center'
     },
@@ -21,7 +23,6 @@ const useStyles = theme => makeStyles({
         justifyContent: 'center',
         width: '35%',
         minWidth: 400,
-        margin: 'auto',
         padding: '20px',
         boxShadow: '0px 0px 1px 0px rgb(137 135 135), 0px 0px 1px 0px rgb(159 159 159), 0px 0px 1px 0px rgb(187 187 187)',
         borderRadius: theme.spacing(1.25),
@@ -30,7 +31,6 @@ const useStyles = theme => makeStyles({
         wrapper: {
             width: "100%",
             minWidth: '100%',
-            margin: 'auto',
             padding: '20px',
             boxShadow: "none",
             borderRadius: 0,
@@ -51,6 +51,20 @@ export default function SignupNav() {
     const classes = useStyles(theme)();
     return (
         <div className={classes.root}>
+            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mb={3}>
+                <Link to="/" className={classes.logoContainer}>
+                    <Logo width={100} />
+                </Link>
+                <Typography
+                    variant="h1"
+                    sx={{
+                        fontSize: '1.5rem',
+                        fontWeight: '500',
+                        textAlign: 'center',
+                        margin: '20px 0px'
+                    }}
+                >Création de votre compte</Typography>
+            </Box>
             <Switch>
                 <Route path={`${path}/user/:userId`} component={() => <UserData />} />
                 <Route path={`${path}/password`} component={() => <PasswordForm goNext={goNext} />} />
@@ -261,7 +275,7 @@ const UserData = () => {
                     reset();
                     dispatch(actions.connectUser({
                         loading: l,
-                        user: getCurrentUser()
+                        user: getCurrentUser().providerData[0]
                     }));
                     history.push("/");
                 }

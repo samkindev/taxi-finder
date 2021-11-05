@@ -21,20 +21,32 @@ class User {
  * The class for the driver
  */
 class Chauffeur {
-    constructor(utilisateurId, taxi, position, itineraire, createdAt) {
+    constructor(utilisateurId, createdAt, vehiculeId, typeTaxi, depart, terminus, permi) {
         this.utilisateur = utilisateurId;
-        this.position = position;
-        this.itineraire = {
-            depart: itineraire.depart,
-            terminus: itineraire.terminus
-        };
-        this.taxi = {
-            type: taxi.type,
-            couleur: taxi.couleur,
-            marque: taxi.marque,
-            plaque: taxi.plaque,
-        };
+        this.permi = permi;
+        this.vehiculeId = vehiculeId;
+        this.typeTaxi = typeTaxi;
+        this.depart = depart;
+        this.terminus = terminus;
         this.createdAt = createdAt;
+    }
+}
+
+/**
+ * The class for the driver vehicle
+ */
+class Vehicule {
+    constructor(chauffeurId, nomChauffeur, type, marque, couleur, plaque, itineraireId, depart, terminus, position) {
+        this.chauffeurId = chauffeurId;
+        this.nomChauffeur = nomChauffeur;
+        this.type = type;
+        this.couleur = couleur;
+        this.marque = marque;
+        this.plaque = plaque;
+        this.itineraireId = itineraireId;
+        this.depart = depart;
+        this.terminus = terminus;
+        this.position = position;
     }
 }
 
@@ -71,9 +83,9 @@ class Arret {
  */
 
 class Commande {
-    constructor(client, driver, arret, etat, createdAt) {
+    constructor(client, taxi, arret, etat, createdAt) {
         this.client = client;
-        this.chauffeur = driver;
+        this.taxi = taxi;
         this.arret = arret;
         this.etat = etat;
         this.createdAt = createdAt;
@@ -104,17 +116,43 @@ const chauffeurConverter = {
     toFirestore: (c) => {
         return {
             utilisateur: c.utilisateur,
-            itineraire: c.itineraire,
-            taxi: c.taxi,
+            vehiculeId: c.vehiculeId,
+            typeTaxi: c.typeTaxi,
+            depart: c.depart,
+            terminus: c.terminus,
+            permi: c.permi,
+            createdAt: firebase.createdAt()
+        };
+    },
+    fromFirestore: (snapShot, options) => {
+        const data = snapShot.data(options);
+        return new Chauffeur(data.utilisateur, data.createdAt, data.vehiculeId, data.typeTaxi, data.depart, data.terminus, data.permi);
+    }
+};
+
+const vehiculeConverter = {
+    toFirestore: (c) => {
+        return {
+            chauffeurId: c.chauffeurId,
+            nomChauffeur: c.nomChauffeur,
+            type: c.type,
+            couleur: c.couleur,
+            marque: c.marque,
+            plaque: c.plaque,
+            itineraireId: c.itineraireId,
+            depart: c.depart,
+            terminus: c.terminus,
             position: c.position,
             createdAt: firebase.createdAt()
         };
     },
     fromFirestore: (snapShot, options) => {
         const data = snapShot.data(options);
-        return new Chauffeur(data.utilisateur, data.taxi, data.position, data.itineraire, data.createdAt);
+        return new Vehicule(data.chauffeurId, data.nomChauffeur, data.type, data.marque, data.couleur, data.plaque, data.itineraireId, data.depart, data.terminus, data.position);
     }
 };
+
+
 
 const itineraireConverter = {
     toFirestore: (v) => {
@@ -149,7 +187,7 @@ const commadeConverter = {
     toFirestore: (v) => {
         return {
             client: v.client,
-            chauffeur: v.chauffeur,
+            taxi: v.taxi,
             arret: v.arret,
             etat: v.etat,
             createdAt: firebase.createdAt()
@@ -157,7 +195,7 @@ const commadeConverter = {
     },
     fromFirestore: (snapShot, options) => {
         const data = snapShot.data(options);
-        return new Commande(data.client, data.chauffeur, data.arret, data.etat, data.createdAt);
+        return new Commande(data.client, data.taxi, data.arret, data.etat, data.createdAt);
     }
 };
 
@@ -167,6 +205,8 @@ const models = {
     userConverter,
     Chauffeur,
     chauffeurConverter,
+    Vehicule,
+    vehiculeConverter,
     Itineraire,
     itineraireConverter,
     Arret,

@@ -1,18 +1,19 @@
 import React from 'react';
 import clsx from 'clsx';
-import { Avatar, Modal, Typography, Button, IconButton } from '@mui/material';
+import { Avatar, Modal, Typography, Button, IconButton, useTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import globalStyles from '../../styles/globalStyles';
 import { Box } from '@mui/system';
 import { Close } from '@mui/icons-material';
 
-export default function SendingDemand({ open, driver, onClose, status, resend }) {
+export default function SendingDemand({ open, taxi, onClose, status, resend }) {
     const handleHangout = () => {
         setTimeout(() => {
             onClose();
         }, 300);
     };
-    const classes = useStyles();
+    const theme = useTheme();
+    const classes = useStyles(theme)();
     const globalClasses = globalStyles();
     return (
         <Modal
@@ -54,9 +55,9 @@ export default function SendingDemand({ open, driver, onClose, status, resend })
                             <>
                                 <Box display="flex" flexDirection="column" alignItems="center">
                                     <Avatar style={{ width: 80, height: 80, marginBottom: 10 }} />
-                                    <Typography variant="caption">Transport {driver.taxi.type}</Typography>
+                                    <Typography variant="caption">Transport {taxi.type}</Typography>
                                 </Box>
-                                <Typography variant="h4" sx={{ fontWeight: 500 }}>{driver.itineraire.depart} - {driver.itineraire.terminus}</Typography>
+                                <Typography variant="h4" sx={{ fontWeight: 500 }}>{taxi.depart} - {taxi.terminus}</Typography>
                                 <Typography variant="caption" style={{ textAlign: 'center' }}>{status}</Typography>
                                 <IconButton
                                     variant="contained"
@@ -76,7 +77,7 @@ export default function SendingDemand({ open, driver, onClose, status, resend })
     )
 }
 
-const useStyles = makeStyles({
+const useStyles = theme => makeStyles({
     rootContainer: {
         width: '100%',
         height: '100%',
@@ -91,6 +92,12 @@ const useStyles = makeStyles({
         color: '#fff',
         "& > *": {
             marginBottom: '30px!important'
+        }
+    },
+    [theme.breakpoints.down('sm')]: {
+        content: {
+            width: '100%',
+            padding: 20
         }
     }
 });

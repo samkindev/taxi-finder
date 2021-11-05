@@ -13,7 +13,7 @@ export default function TaxiList({ itineraire, setTaxi }) {
             <Typography sx={{ marginBottom: 15 }}>Liste des taxis</Typography>
             <div>
                 {taxis.map(taxi => (
-                    <TaxiCard taxi={taxi} />
+                    <TaxiCard key={taxi.id} taxi={taxi} />
                 ))}
             </div>
         </div>

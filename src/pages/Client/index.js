@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import { CircularProgress, Grid, Typography } from '@mui/material';
-import { getCurrentDestinaton } from '../../app/reducers/commads';
+import { actions, getCurrentDestinaton, setC } from '../../app/reducers/commads';
 import { Box } from '@mui/system';
 import { CreateCommandeTaxi, getItineraireTaxis, subscibeClient } from '../../app/firebase/api/commande';
 import { TaxiCard } from '../../components';
 import models from '../../app/firebase/api/models';
 import { getUser } from '../../app/reducers/user';
 import SendingDemand from '../../components/Client/SendingDemand';
+import { useHistory, useRouteMatch } from 'react-router';
 
 export default function ClientMainPage() {
     const user = useSelector(getUser);
@@ -20,8 +21,9 @@ export default function ClientMainPage() {
     const [loading, setLoading] = useState(true);
     const [commandeState, setCommandeState] = useState('idle');
 
-    console.log(arret);
-
+    const dispatch = useDispatch();
+    const history = useHistory();
+    const { url } = useRouteMatch();
     useEffect(() => {
         getItineraireTaxis(itineraire, arret, (l, error, txs) => {
             setLoading(l);
@@ -52,19 +54,25 @@ export default function ClientMainPage() {
                 return;
             }
 
-            console.log(res);
             if (res) {
-                subscibeClient(res.id, (l, err, res) => {
+                subscibeClient(res.id, (l, err, sub) => {
                     if (err) {
                         console.log(err);
                         return;
                     }
 
-                    console.log(res);
-                    if (res) {
-                        if (res.etat === "confirmed") {
+                    if (sub) {
+                        if (sub.etat === "confirmed") {
                             setCommandeState("Commande confirmée.");
-                        } else if (res.etat === "rejected") {
+                            setTimeout(() => {
+                                console.log(taxi);
+                                dispatch(actions.setCurrentCommand({
+                                    vehicule: taxi.id,
+                                    commande: res.id
+                                }));
+                                history.push(url + "/commander-taxi");
+                            }, 200);
+                        } else if (sub.etat === "rejected") {
                             setCommandeState("Command rejetée.");
                         }
                     }
@@ -91,10 +99,10 @@ export default function ClientMainPage() {
                         </header>
                         <div className={classes.taxiList}>
                             {taxis.map(t => (
-                                <TaxiCard taxi={t} onClick={() => handleSelectTaxi(t)} />
+                                <TaxiCard key={t.id} taxi={t} onClick={() => handleSelectTaxi(t)} />
                             ))}
                             {commandeState !== 'idle' &&
-                                <SendingDemand status={commandeState} open={commandeState !== "idle"} driver={selectedTaxi} onClose={() => setCommandeState('idle')} />
+                                <SendingDemand status={commandeState} open={commandeState !== "idle"} taxi={selectedTaxi} onClose={() => setCommandeState('idle')} />
                             }
                         </div>
                     </div>

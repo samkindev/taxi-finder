@@ -4,6 +4,7 @@ import { Typography } from '@mui/material';
 import { subscibeDriver } from '../../app/firebase/api/commande';
 import { getCurrentDriver } from '../../app/reducers/driver';
 import NewCommand from '../../components/Chauffeur/NewCommand';
+import { updateVehiculeLocation } from '../../app/firebase/api/vehicule';
 
 export default function MainPage() {
     const [newCommand, setNewCommand] = useState(false);
@@ -17,7 +18,7 @@ export default function MainPage() {
 
     const driver = useSelector(getCurrentDriver);
     useEffect(() => {
-        subscibeDriver(driver.id, (l, err, res) => {
+        const unsub = subscibeDriver(driver.vehiculeId, (l, err, res) => {
             if (res) {
                 if (res.length === 1) {
                     setNewCommand(true);
@@ -25,7 +26,27 @@ export default function MainPage() {
                 }
             }
         });
-    }, [driver.id]);
+
+        const unw = navigator.geolocation.watchPosition((position) => {
+            console.log(position.coords);
+            updateVehiculeLocation(
+                driver.vehiculeId,
+                { lon: position.coords.longitude, lat: position.coords.latitude },
+                (l, err, res) => {
+                    if (res) {
+                        console.log("Position changed");
+                    }
+                }
+            );
+        }, (err) => {
+            console.log(err);
+        });
+
+        return () => {
+            navigator.geolocation.clearWatch(unw);
+            unsub();
+        };
+    }, [driver.vehiculeId]);
     return (
         <div>
             <Typography variant="h1">Driver</Typography>

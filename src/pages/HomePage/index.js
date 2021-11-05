@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import clsx from 'clsx';
+import { useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import { Button, Typography, useTheme } from '@mui/material';
 import globalStyles from '../../styles/globalStyles';
 import ItineraireModal from '../../components/Client/ItineraireModal';
+import bg from '../../assets/bg.jpg';
+import { getUser } from '../../app/reducers/user';
 
 export default function LandingPage() {
+    const user = useSelector(getUser);
     const history = useHistory();
+    const goToLogin = () => {
+        history.push("/login");
+    };
     const handleGoToCLient = () => {
-        history.push("/client/1");
+        if (user) {
+            history.push("/client/1");
+        } else {
+            goToLogin();
+        }
     };
     const [open, setOpen] = useState(false);
 
     const handleOpenModal = () => {
-        setOpen(true);
+        if (user) {
+            setOpen(true);
+        } else {
+            goToLogin();
+        }
     };
 
     const handleCloseModal = () => {
@@ -22,7 +37,11 @@ export default function LandingPage() {
     };
 
     const handleGoToDriver = () => {
-        history.push("/conducteur/1");
+        if (user) {
+            history.push("/conducteur/1");
+        } else {
+            goToLogin();
+        }
     };
 
     const theme = useTheme();
@@ -32,16 +51,17 @@ export default function LandingPage() {
         <div className={classes.root}>
             {open && <ItineraireModal open={open} onClose={handleCloseModal} goToClient={handleGoToCLient} />}
             <div className={classes.container}>
-                <div className={classes.heroContainer}>
+                <div className={clsx("home", classes.heroContainer)}>
                     <div className={clsx(classes.hero, globalClasses.centerFlex)}>
                         <div className={classes.heroContent}>
                             <Typography variant="title" component="h1" sx={{ lineHeight: 1.1, maxWidth: 800 }} className={classes.title}>Changez votre façon de vous déplacer</Typography>
-                            <Typography variant="body1" className={classes.text1} style={{ color: '#444' }}>Conduisez en securité et gangez de l'argent.<br />Trouvez votre transport rapidement et gagnez du temps.</Typography>
+                            <Typography variant="body1" className={classes.text1} style={{ color: 'inherit' }}>Conduisez en securité et gangez de l'argent.<br />Trouvez votre transport rapidement et gagnez du temps.</Typography>
                             <div className={clsx(globalClasses.centerFlex, classes.heroActions)} style={{ width: '100%' }}>
                                 <Button
                                     variant="contained"
                                     color="secondary"
                                     size="large"
+                                    disableElevation
                                     sx={{
                                         fontSize: '1.1rem'
                                     }}
@@ -53,6 +73,7 @@ export default function LandingPage() {
                                     variant="contained"
                                     color="primary"
                                     size="large"
+                                    disableElevation
                                     sx={{
                                         marginLeft: 1.5,
                                         fontSize: '1.1rem'
@@ -72,13 +93,21 @@ export default function LandingPage() {
 
 const useStyles = theme => makeStyles({
     heroContainer: {
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        backgroundImage: "url(" + bg + ")",
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        position: 'relative',
+        color: '#fff',
     },
     hero: {
-        minHeight: 530,
+        height: 'calc(100vh - 52px)',
         maxWidth: '1220px',
         margin: 'auto',
-        padding: 20
+        padding: 20,
+        background: ' #00000047',
+        color: 'inherit'
     },
     heroContent: {
         display: 'flex',
@@ -86,6 +115,7 @@ const useStyles = theme => makeStyles({
         justifyContent: 'space-between',
         alignItems: 'center',
         textAlign: 'center',
+        borderRadius: 10,
         "& p": {
             marginTop: 20,
             marginBottom: 20
@@ -106,11 +136,16 @@ const useStyles = theme => makeStyles({
         padding: '100px 20px'
     },
     [theme.breakpoints.down("md")]: {
+        heroContent: {
+            background: '#0008',
+            padding: 20,
+            maxWidth: 550,
+        },
         title: {
-            fontSize: '28px!important'
+            fontSize: '40px!important'
         },
         text1: {
-            fontSize: '17px!important'
+            fontSize: '20px!important'
         },
         heroActions: {
             flexDirection: 'column',

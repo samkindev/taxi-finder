@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Modal, TextField, Typography, Button, Fade, IconButton, useTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
 import { Close } from '@mui/icons-material';
 import { actions } from '../../app/reducers/commads';
+import { getAll } from '../../app/firebase/api/itineraire';
+import { AutocompleteInput } from '..';
 
 export default function ItineraireModal({ open, onClose, setDestination, goToClient }) {
     const [step, setStep] = useState(0);
+    const [extrems, setExtrems] = useState([]);
     const [itineraire, setItineraire] = useState({
         depart: '',
         terminus: ''
@@ -22,7 +25,7 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
             }
 
             setTimeout(() => {
-                dispatch(actions.setCurrentCommand({ itineraire, arret }));
+                dispatch(actions.setCurrentDestination({ itineraire, arret }));
                 onClose();
                 if (typeof goToClient === "function") {
                     goToClient();
@@ -35,6 +38,29 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
         setStep(step + 1);
     };
 
+    useEffect(() => {
+        getAll((l, err, res) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            if (res) {
+                const extrems = [];
+                res.forEach(i => {
+                    if (!extrems.some(el => el === i.extremite[0])) {
+                        extrems.push(i.extremite[0]);
+                    }
+                    if (!extrems.some(el => el === i.extremite[1])) {
+                        extrems.push(i.extremite[1]);
+                    }
+                });
+
+                setExtrems(extrems);
+            }
+        });
+    }, []);
+
     const theme = useTheme();
     const classes = useStyles(theme)();
     return (
@@ -44,7 +70,7 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
             onClose={onClose}
             BackdropProps={{
                 style: {
-                    backgroundColor: "rgb(215 215 215 / 39%)",
+                    backgroundColor: "rgb(0 0 0 / 48%)",
                 },
             }}
         >
@@ -58,39 +84,15 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
                             <div>
                                 <Typography>Votre itinéraire</Typography>
                                 <Box padding={2} paddingLeft={2.5} borderLeft="2px solid #00000021" marginLeft={1}>
-                                    <TextField
-                                        placeholder="Point de départ"
-                                        name="depart"
-                                        id="depart"
-                                        type="text"
-                                        fullWidth
-                                        color="secondary"
-                                        size="small"
+                                    <AutocompleteInput
+                                        options={extrems}
                                         value={itineraire.depart}
-                                        onChange={e => setItineraire(it => ({
-                                            ...it,
-                                            depart: e.target.value
-                                        }))}
-                                        sx={{
-                                            marginBottom: 2
-                                        }}
+                                        onChange={(val) => setItineraire(it => ({ ...it, depart: val }))}
                                     />
-                                    <TextField
-                                        placeholder="Destination"
-                                        color="secondary"
-                                        size="small"
-                                        name="destination"
-                                        id="destination"
-                                        type="text"
-                                        fullWidth
+                                    <AutocompleteInput
+                                        options={extrems}
                                         value={itineraire.terminus}
-                                        onChange={e => setItineraire(it => ({
-                                            ...it,
-                                            terminus: e.target.value
-                                        }))}
-                                        sx={{
-                                            marginBottom: 2
-                                        }}
+                                        onChange={(val) => setItineraire(it => ({ ...it, terminus: val }))}
                                     />
                                     <Button
                                         size="small"
@@ -99,6 +101,7 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
                                         variant="contained"
                                         onClick={goToArret}
                                         disabled={itineraire.depart === "" || itineraire.terminus === ""}
+                                        sx={{ marginTop: 2 }}
                                     >
                                         Suivant
                                     </Button>
@@ -174,7 +177,8 @@ const useStyles = theme => makeStyles({
             width: "100%",
             padding: "20px 10px",
             transform: 'none',
-            position: 'static'
+            position: 'static',
+            borderRadius: 0,
         }
     }
 });

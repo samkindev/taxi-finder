@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useDispatch } from 'react-redux';
 import { HashRouter as Router, Route, Switch } from 'react-router-dom';
 import { CircularProgress, ThemeProvider } from '@mui/material';

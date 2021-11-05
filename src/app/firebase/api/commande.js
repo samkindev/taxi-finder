@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, getDoc, query, where, doc, onSnapshot, updateDoc, collectionGroup } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, onSnapshot, updateDoc, collectionGroup, getDoc } from 'firebase/firestore';
 import firebase from '..';
 import models from './models';
 
@@ -24,13 +24,22 @@ export const CreateCommandeTaxi = async (data, cb) => {
 
 export const getItineraireTaxis = async (itineraire, arret, cb) => {
     try {
+        if (!itineraire) {
+            return cb(false, "Aucun itinéraire spécifié.");
+        }
+
         cb(true, null, null);
-        const q = query(collectionGroup(db, "itineraire", where("depart", "==", itineraire.depart))).withConverter(models.chauffeurConverter); //query(collection(db, "chauffeurs"));
-        const driversDocs = (await getDocs(q)).docs;
+        const q = query(
+            collectionGroup(
+                db, "vehicules"
+            ),
+            where("depart", "==", itineraire.depart),
+            where("terminus", "==", itineraire.terminus)
+        ).withConverter(models.vehiculeConverter); //query(collection(db, "chauffeurs"));
+        const vDocs = (await getDocs(q)).docs;
 
-        console.log(driversDocs);
-
-        const taxis = driversDocs.map(d => {
+        const taxis = vDocs.map(d => {
+            console.log(d.data());
             return ({
                 id: d.id,
                 ...d.data()
@@ -43,9 +52,9 @@ export const getItineraireTaxis = async (itineraire, arret, cb) => {
     }
 };
 
-export const subscibeDriver = (driverId, cb) => {
+export const subscibeDriver = (vehiculeId, cb) => {
     cb(true, null, null);
-    const q = query(collection(db, "commandes"), where("chauffeur", "==", driverId)).withConverter(models.commadeConverter);
+    const q = query(collection(db, "commandes"), where("taxi", "==", vehiculeId)).withConverter(models.commadeConverter);
     const unsubscribe = onSnapshot(q, (qSnapshot) => {
         const commands = [];
         qSnapshot.docChanges().forEach(change => {
@@ -67,13 +76,24 @@ export const subscibeDriver = (driverId, cb) => {
     return unsubscribe;
 };
 
+export const subsicribeUserToDriver = (vehiculeId, cb) => {
+    cb(true, null, null);
+    const q = doc(db, "vehicules", vehiculeId).withConverter(models.vehiculeConverter);
+    const unsubscribe = onSnapshot(q, (qSnapshot) => {
+        cb(false, null, { id: qSnapshot.id, ...qSnapshot.data() });
+    }, error => {
+        cb(false, error.message, null);
+    });
+
+    return unsubscribe;
+};
+
 export const subscibeClient = (comId, cb) => {
     cb(true, null, null);
     const unsub = onSnapshot(doc(db, "commandes", comId), (snapshot) => {
         const command = snapshot.data();
         cb(false, null, command);
     }, error => {
-        console.log(error);
         cb(false, error.message, null);
     });
 
@@ -99,5 +119,31 @@ export const rejectCommad = async (idCom, cb) => {
         cb(false, null, 1);
     } catch (error) {
         cb(false, null, null);
+    }
+};
+
+export const getCommandData = async (comId, cb) => {
+    try {
+        cb(true);
+        const comRef = doc(db, "commandes", comId).withConverter(models.commadeConverter);
+        const com = await getDoc(comRef);
+        if (com.data()) {
+            const vRef = doc(db, "vehicules", com.data().taxi).withConverter(models.vehiculeConverter);
+            const v = await getDoc(vRef);
+
+            cb(false, null, {
+                id: com.id,
+                ...com.data(),
+                vehicule: {
+                    id: v.id,
+                    ...v.data()
+                }
+            });
+
+        } else {
+            cb(false, "Aucune commande retrouvée.", null);
+        }
+    } catch (err) {
+        cb(false, err.message, null);
     }
 };

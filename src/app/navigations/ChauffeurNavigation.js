@@ -53,7 +53,7 @@ export default function ChauffeurNavigation() {
                 <div className={classes.loading}>
                     <CircularProgress color="secondary" size={70} />
                 </div> :
-                !driver ?
+                (!driver || !driver.vehiculeId || driver.vehiculeId === "") ?
                     <WelcomeChauffeur /> :
                     <div>
                         <ChauffeurAppBar user={user} />

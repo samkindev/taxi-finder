@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, getDocs, getDoc, query, where, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, query, where, doc, updateDoc } from 'firebase/firestore';
 import firebase from '..';
 import models from './models';
 
@@ -36,6 +36,7 @@ export const signupUser = (email, password, cb) => {
 export const createUtilisateur = async (data, cb) => {
     try {
         cb(true, null, null);
+        // const user = getCurrentUser();
         const ref = collection(db, 'utilisateurs').withConverter(models.userConverter);
         const clientRef = await addDoc(ref, data);
         cb(false, null, clientRef.withConverter(models.userConverter));
@@ -76,15 +77,17 @@ export const logoutUser = async (cb) => {
     try {
         cb(true, null);
         await auth.signOut();
-        cb(false, null);
+        cb(false, null, 1);
     } catch (error) {
         console.log(error);
-        cb(error.message);
+        cb(false, error.message);
     }
 };
 
 export const getCurrentUser = () => {
-    return firebase.auth.currentUser;
+    const user = firebase.auth.currentUser;
+    console.log(user);
+    return user;
 };
 
 /**
@@ -111,7 +114,7 @@ export const getUserData = (cb) => {
                     cb(false, null, null);
                 }
             } catch (error) {
-                cb(false, null, error.message);
+                cb(false, error.message, null);
             }
         } else {
             cb(false, null, null);
@@ -140,6 +143,28 @@ export const createDriverAccount = async (data, cb) => {
     } catch (error) {
         console.log(error);
         cb(null, error.message, null);
+    }
+};
+
+export const updateDriver = async (driverId, data, cb) => {
+    try {
+        cb(true);
+        const dRef = doc(db, "chauffeurs", driverId).withConverter(models.chauffeurConverter);
+
+        updateDoc(dRef, { vehiculeId: data.vehiculeId, typeTaxi: data.typeTaxi, depart: data.depart, terminus: data.terminus })
+            .then(async () => {
+                const d = await getDoc(dRef.withConverter(models.chauffeurConverter));
+
+                cb(false, null, {
+                    id: d.id,
+                    ...d.data()
+                });
+            })
+            .catch(err => {
+                cb(false, err.message);
+            });
+    } catch (err) {
+        cb(false, err.message, null);
     }
 };
 
