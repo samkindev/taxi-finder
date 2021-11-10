@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Link, NavLink, useHistory } from 'react-router-dom';
-import { Typography, Button, Avatar, Hidden, IconButton, CircularProgress } from '@mui/material';
+import { Link, useHistory } from 'react-router-dom';
+import { Button, Avatar, CircularProgress } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { MenuSharp } from '@mui/icons-material';
 import { logoutUser } from '../firebase/api/user';
 import { useDispatch } from 'react-redux';
 import { actions } from '../reducers/user';

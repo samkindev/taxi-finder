@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMapbox, { GeolocateControl, Marker, FlyToInterpolator } from 'react-map-gl';
 import { LocalTaxi } from '@mui/icons-material';
 
@@ -12,7 +12,6 @@ export default function Map({ taxiPosition }) {
         bearing: 0,
         pitch: 50
     });
-
     const [settings, setSettings] = useState({
         dragPan: true,
         dragRotate: true,
@@ -32,12 +31,27 @@ export default function Map({ taxiPosition }) {
         top: 5
     };
 
+    const resize = () => {
+        setViewport(v => ({
+            ...v,
+            width: '100%',
+            height: '100%'
+        }))
+    }
+    
+    useEffect(() => {
+        window.addEventListener('resize', () => {
+            resize();
+        })
+
+        return () => window.removeEventListener('resize', resize);
+    }, []);
     return (
         <ReactMapbox
             mapboxApiAccessToken={"pk.eyJ1Ijoic2Fta2luIiwiYSI6ImNrazYzZm1vejAwNW0yeG4zZzcwcXhtc3cifQ.ncbMs_p8t-ie5IhwskX3UQ"}
             {...viewPort}
             {...settings}
-            mapStyle="mapbox://styles/mapbox/dark-v9"
+            mapStyle= 'mapbox://styles/mapbox/light-v9' //"mapbox://styles/mapbox/dark-v9"
             onViewportChange={(newViewPort) => setViewport(newViewPort)}
             transitionDuration={1000}
             transitionInterpolator={new FlyToInterpolator()}
@@ -48,9 +62,12 @@ export default function Map({ taxiPosition }) {
                 style={geolocateControlStyle}
                 trackUserLocation={true}
             />
-            <Marker latitude={taxiPosition.lat} longitude={taxiPosition.lon}>
-                <LocalTaxi color="primary" fontSize="medium" />
-            </Marker>
+            {/* <NavigationControl /> */}
+            {taxiPosition &&
+                <Marker latitude={taxiPosition.lat} longitude={taxiPosition.lon}>
+                    <LocalTaxi color="primary" fontSize="medium" />
+                </Marker>
+            }
         </ReactMapbox>
     )
 }

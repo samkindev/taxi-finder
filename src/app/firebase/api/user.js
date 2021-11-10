@@ -168,6 +168,24 @@ export const updateDriver = async (driverId, data, cb) => {
     }
 };
 
+export const updateDriverItineraire = async (driverId, vehiculeId, depart, terminus, cb) => {
+    try {
+        cb(true, null, 0);
+        const dRef = doc(db, "chauffeurs", driverId);
+        const vRef = doc(db, "vehicules", vehiculeId);
+        await updateDoc(vRef.withConverter(models.vehiculeConverter), { depart, terminus });
+        await updateDoc(dRef.withConverter(models.chauffeurConverter), {depart, terminus})
+
+        const d = await getDoc(dRef.withConverter(models.chauffeurConverter));
+        cb(false, null, {
+            id: d.id,
+            ...d.data()
+        });
+    } catch (err) {
+        cb(false, err.message, null);        
+    }
+}
+
 
 /**
  * Gets the driver account by the user id.

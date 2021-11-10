@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Modal, TextField, Typography, Button, Fade, IconButton, useTheme } from '@mui/material';
+import { Modal, TextField, Typography, Button, Fade, IconButton, useTheme, Alert } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
-import { Close } from '@mui/icons-material';
+import { ArrowBack, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { actions } from '../../app/reducers/commads';
 import { getAll } from '../../app/firebase/api/itineraire';
 import { AutocompleteInput } from '..';
+import Map from '../Map';
 
 export default function ItineraireModal({ open, onClose, setDestination, goToClient }) {
     const [step, setStep] = useState(0);
-    const [extrems, setExtrems] = useState([]);
-    const [itineraire, setItineraire] = useState({
-        depart: '',
-        terminus: ''
-    });
+    const [itineraires, setItineraires] = useState([]);
+    const [itineraire, setItineraire] = useState();
+    const [depart, setDepart] = useState('');
     const [arret, setArret] = useState('');
+    const [error, setError] = useState()
 
     const dispatch = useDispatch();
     const handleConfirm = () => {
@@ -25,7 +25,7 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
             }
 
             setTimeout(() => {
-                dispatch(actions.setCurrentDestination({ itineraire, arret }));
+                dispatch(actions.setCurrentDestination({ itineraire, arret, depart }));
                 onClose();
                 if (typeof goToClient === "function") {
                     goToClient();
@@ -34,9 +34,22 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
         }
     };
 
-    const goToArret = () => {
-        setStep(step + 1);
+    const goToNext = () => {
+        if (step === 0 && !itineraire) {
+            setError("Veuillez renseigner l'itinéraire.")
+        } else if (step === 1 && depart === "") {
+            setError("Veuillez renseigner le point de départ.")
+        } else if (step === 2 && arret === "") {
+            setError("Veuillez renseigner l'arrêt.")
+        } else {
+            setError(null);
+            setStep(step + 1);
+        }        
     };
+
+    const goBack = () => {
+        setStep(step - 1);
+    }
 
     useEffect(() => {
         getAll((l, err, res) => {
@@ -46,17 +59,7 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
             }
 
             if (res) {
-                const extrems = [];
-                res.forEach(i => {
-                    if (!extrems.some(el => el === i.extremite[0])) {
-                        extrems.push(i.extremite[0]);
-                    }
-                    if (!extrems.some(el => el === i.extremite[1])) {
-                        extrems.push(i.extremite[1]);
-                    }
-                });
-
-                setExtrems(extrems);
+                setItineraires(res);
             }
         });
     }, []);
@@ -75,35 +78,44 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
             }}
         >
             <div className={classes.content}>
-                <IconButton className={classes.closeBtn} onClick={onClose}>
-                    <Close />
-                </IconButton>
-                <Box p={2}>
+                <Box borderBottom="1px solid #eaeaea" p={theme.spacing(1, 0)} display="flex" alignItems="center">
+                    <IconButton className={classes.closeBtn} onClick={onClose}>
+                        <ArrowBack />
+                    </IconButton>
+                    <Typography sx={{marginLeft: 2, fontSize: 17}} variant="h6">Commande taxi</Typography>
+                </Box>
+                {error && <Alert sx={{mt: 1}} severity="error" color="error">{error}</Alert>}
+                <Box p={2} className={classes.body}>
                     {step === 0 &&
                         <Fade in={step === 0}>
-                            <div>
-                                <Typography>Votre itinéraire</Typography>
-                                <Box padding={2} paddingLeft={2.5} borderLeft="2px solid #00000021" marginLeft={1}>
+                            <div className={classes.form}>
+                                <Typography 
+                                    variant="h2"
+                                    sx={{
+                                        color: theme.palette.default.main,
+                                        fontSize: 25,
+                                        fontWeight: '600',
+                                        mb: 1.5
+                                    }}
+                                >Quelle course voulez-vous faire ?</Typography>
+                                <Typography variant="caption">Renseigner votre itinéraire.</Typography>
+                                <Box>
                                     <AutocompleteInput
-                                        options={extrems}
-                                        value={itineraire.depart}
-                                        onChange={(val) => setItineraire(it => ({ ...it, depart: val }))}
-                                    />
-                                    <AutocompleteInput
-                                        options={extrems}
-                                        value={itineraire.terminus}
-                                        onChange={(val) => setItineraire(it => ({ ...it, terminus: val }))}
+                                        options={itineraires}
+                                        value={itineraire}
+                                        onChange={(val) => setItineraire(val)}
                                     />
                                     <Button
                                         size="small"
                                         disableElevation
                                         color="secondary"
                                         variant="contained"
-                                        onClick={goToArret}
-                                        disabled={itineraire.depart === "" || itineraire.terminus === ""}
+                                        onClick={goToNext}
+                                        disabled={itineraire === ""}
                                         sx={{ marginTop: 2 }}
                                     >
                                         Suivant
+                                        <ChevronRight fontSize="small" sx={{marginLeft: 1}} />
                                     </Button>
                                 </Box>
                             </div>
@@ -111,9 +123,72 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
                     }
                     {step === 1 &&
                         <Fade in={step === 1}>
-                            <div>
-                                <Typography>Votre arrêt</Typography>
-                                <Box padding={2} paddingLeft={2.5} borderLeft="2px solid #00000021" marginLeft={1}>
+                            <div className={classes.form}>
+                                <Typography 
+                                    variant="h2"
+                                    sx={{
+                                        color: theme.palette.default.main,
+                                        fontSize: 25,
+                                        fontWeight: '600',
+                                        mb: 2
+                                    }}
+                                >Quel est votre point de départ ?</Typography>
+                                <Typography variant="caption">Où voulez-vous que le taxi vous prenne ?</Typography>
+                                <Box mt={1.5}>
+                                    <TextField
+                                        placeholder="Point de départ"
+                                        color="secondary"
+                                        size="small"
+                                        name="depart"
+                                        id="depart"
+                                        type="text"
+                                        fullWidth
+                                        value={depart}
+                                        onChange={e => setDepart(e.target.value)}
+                                        sx={{
+                                            marginBottom: 2
+                                        }}
+                                    />
+                                    <Box display="flex" justifyContent="space-between">
+                                        <Button
+                                            size="small"
+                                            disableElevation
+                                            color="default"
+                                            variant="text"
+                                            onClick={goBack}
+                                        >
+                                            <ChevronLeft fontSize="small" sx={{marginLeft: 1}} />
+                                            Itinéraire
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            disableElevation
+                                            color="secondary"
+                                            variant="contained"
+                                            onClick={goToNext}
+                                        >
+                                            Suivant
+                                            <ChevronRight fontSize="small" sx={{marginLeft: 1}} />
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            </div>
+                        </Fade>
+                    }
+                    {step === 2 &&
+                        <Fade in={step === 2}>
+                            <div className={classes.form}>
+                                <Typography
+                                    variant="h2"
+                                    sx={{
+                                        color: theme.palette.default.main,
+                                        fontSize: 25,
+                                        fontWeight: '600',
+                                        mb: 1.5
+                                    }}
+                                >Point d'arrêt</Typography>
+                                <Typography variant="caption">Où allez-vous vous arrêter ?</Typography>
+                                <Box mt={1.5}>
                                     <TextField
                                         placeholder="Votre arrêt"
                                         color="secondary"
@@ -128,19 +203,38 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
                                             marginBottom: 2
                                         }}
                                     />
-                                    <Button
-                                        size="small"
-                                        disableElevation
-                                        color="secondary"
-                                        variant="contained"
-                                        onClick={handleConfirm}
-                                    >
-                                        Confirmer
-                                    </Button>
+                                    <Box display="flex" justifyContent="space-between">
+                                        <Button
+                                            size="small"
+                                            disableElevation
+                                            color="default"
+                                            variant="text"
+                                            onClick={goBack}
+                                        >
+                                            <ChevronLeft fontSize="small" sx={{marginLeft: 1}} />
+                                            Point de départ
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            disableElevation
+                                            color="secondary"
+                                            variant="contained"
+                                            onClick={handleConfirm}
+                                        >
+                                            Confirmer
+                                            <ChevronRight fontSize="small" sx={{marginLeft: 1}} />
+                                        </Button>
+                                    </Box>
                                 </Box>
                             </div>
                         </Fade>
                     }
+                    <Box width="100%" p={theme.spacing(2, 0)} height="50vh">
+                        <Typography variant="h6" sx={{fontSize: 17, mb: 2}}>Ma position actuelle</Typography>
+                        <Box className={classes.mapContainer} borderRadius={theme.spacing(2)}>
+                            <Map />
+                        </Box>
+                    </Box>
                 </Box>
             </div>
         </Modal>
@@ -159,26 +253,30 @@ const useStyles = theme => makeStyles({
     content: {
         backgroundColor: '#fff',
         boxShadow: "0px 0px 20px #4e4e4e4a",
-        width: 500,
-        minHeight: 300,
-        borderRadius: 7,
+        width: '70vw',
+        minWidth: '500px',
+        maxWidth: '650px',
+        minHeight: '100vh',
         position: 'absolute',
-        top: 50,
+        top: 0,
         left: '50%',
-        transform: 'translateX(-50%)'
+        transform: 'translateX(-50%)',
     },
-    closeBtn: {
-        position: 'absolute!important',
-        top: 10,
-        right: 15
+    form: {
+        maxWidth: 500
+    },
+    mapContainer: {
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
     },
     [theme.breakpoints.down('sm')]: {
         content: {
             width: "100%",
-            padding: "20px 10px",
+            minWidth: "100%",
             transform: 'none',
             position: 'static',
             borderRadius: 0,
         }
-    }
+    },
 });

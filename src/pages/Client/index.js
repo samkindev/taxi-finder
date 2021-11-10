@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
-import { CircularProgress, Grid, Typography } from '@mui/material';
-import { actions, getCurrentDestinaton, setC } from '../../app/reducers/commads';
+import { CircularProgress, Typography } from '@mui/material';
+import { actions, getCurrentDestinaton } from '../../app/reducers/commads';
 import { Box } from '@mui/system';
 import { CreateCommandeTaxi, getItineraireTaxis, subscibeClient } from '../../app/firebase/api/commande';
 import { TaxiCard } from '../../components';
@@ -40,7 +40,7 @@ export default function ClientMainPage() {
     }, [arret, itineraire]);
 
     const handleSelectTaxi = (taxi) => {
-        const c = new models.Commande(user.id, taxi.id, arret, "sending");
+        const c = new models.Commande(user.id, taxi.id, currentDest.depart, arret, "sending");
         setSelectedTaxi(taxi);
         CreateCommandeTaxi(c, (l, err, res) => {
             if (l) {
@@ -83,33 +83,21 @@ export default function ClientMainPage() {
     };
     const classes = useStyles();
     return (
-        <Grid container className={classes.root}>
-            {/* <aside className={classes.aside}>
-                <ClientSideBar setDestination={setDestination} />
-            </aside> */}
-            <Grid item xs={0} sm={3}></Grid>
-            <Grid item xs={12} sm={6} className={classes.main}>
-                {loading ?
-                    <Box height="calc(100vh - 70px)" display="flex" justifyContent="center" alignItems="center">
-                        <CircularProgress color="secondary" size={50} />
-                    </Box>
-                    : <div>
-                        <header className={classes.listTitle}>
-                            <Typography>Les taxis pour votre course</Typography>
-                        </header>
-                        <div className={classes.taxiList}>
-                            {taxis.map(t => (
-                                <TaxiCard key={t.id} taxi={t} onClick={() => handleSelectTaxi(t)} />
-                            ))}
-                            {commandeState !== 'idle' &&
-                                <SendingDemand status={commandeState} open={commandeState !== "idle"} taxi={selectedTaxi} onClose={() => setCommandeState('idle')} />
-                            }
-                        </div>
-                    </div>
+        <div container className={classes.root}>
+            <div item xs={0} sm={3}></div>
+            <div item xs={12} sm={6} className={classes.main}>
+                <TaxiList loading={loading} taxis={taxis} handleSelectTaxi={handleSelectTaxi} />
+                {commandeState !== 'idle' &&
+                    <SendingDemand 
+                        status={commandeState} 
+                        open={commandeState !== "idle"} 
+                        taxi={selectedTaxi} 
+                        onClose={() => setCommandeState('idle')} 
+                    />
                 }
-            </Grid>
-            <Grid item xs={0} sm={3}></Grid>
-        </Grid>
+            </div>
+            <div item xs={0} sm={3}></div>
+        </div>
     )
 }
 
@@ -138,3 +126,27 @@ const useStyles = makeStyles(theme => ({
         borderBottom: '1px solid #eaeaea',
     }
 }));
+
+
+const TaxiList = ({loading, taxis, handleSelectTaxi}) => {
+    const classes = useStyles();
+    return (
+        <div>
+            {loading ?
+                <Box height="calc(100vh - 70px)" display="flex" justifyContent="center" alignItems="center">
+                    <CircularProgress color="secondary" size={50} />
+                </Box>
+                : <div>
+                    <header className={classes.listTitle}>
+                        <Typography>Les taxis pour votre course</Typography>
+                    </header>
+                    <div className={classes.taxiList}>
+                        {taxis.map(t => (
+                            <TaxiCard key={t.id} taxi={t} onClick={() => handleSelectTaxi(t)} />
+                        ))}
+                    </div>
+                </div>
+            }
+        </div>
+    )
+}

@@ -14,8 +14,29 @@ export default function ChauffeurNavigation() {
     const user = useSelector(getUser);
     const driver = useSelector(selectDriver);
     const loadingUser = useSelector(getLoadingState);
-
     const [loading, setLoading] = useState(false);
+    const [openMenu, setOpenMenu] = useState(false);
+
+    const toggleManu = () => {
+        console.log("Click");
+        setOpenMenu(!openMenu);
+    }
+
+    useEffect(() => {
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 700) {
+                setOpenMenu(true);
+                return;
+            } else {
+                setOpenMenu(false);
+                return;
+            }
+        })
+
+        if (window.innerWidth > 700) {
+            setOpenMenu(true);
+        }
+    }, []);
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -56,11 +77,11 @@ export default function ChauffeurNavigation() {
                 (!driver || !driver.vehiculeId || driver.vehiculeId === "") ?
                     <WelcomeChauffeur /> :
                     <div>
-                        <ChauffeurAppBar user={user} />
+                        <ChauffeurAppBar user={user} toggleManu={toggleManu} />
                         <Switch>
                             <Route path={path} render={() => {
                                 return (
-                                    <MainPage />
+                                    <MainPage openMenu={openMenu} toggleManu={toggleManu} />
                                 )
                             }} />
                         </Switch>

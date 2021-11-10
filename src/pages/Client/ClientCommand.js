@@ -7,7 +7,6 @@ import { useSelector } from 'react-redux';
 import { getCurrentCommand } from '../../app/reducers/commads';
 import { Redirect } from 'react-router';
 import { Box } from '@mui/system';
-import globalStyles from '../../styles/globalStyles';
 
 export default function ClientCommandPage() {
     const [taxiPosition, setTaxiPosition] = useState();

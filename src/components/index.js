@@ -8,3 +8,5 @@ export { default as NewCommand } from './Chauffeur/NewCommand';
 export { default as AutocompleteInput } from './Inputs/AutoComplete';
 export { default as Map } from './Map';
 export { default as Logo } from './Logo';
+export {default as ModifItineraire} from './Chauffeur/ModifItinineraire';
+export {default as Vehicule} from './Chauffeur/Vehicule';

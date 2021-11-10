@@ -150,7 +150,7 @@ export const getItineraireArret = async (idItineraire, cb) => {
 
         const unSub = onSnapshot(q, (snaps) => {
             const res = [];
-            snaps.docs.map(snap => {
+            snaps.docs.forEach(snap => {
                 res.push({ id: snap.id, ...snap.data() });
             });
             cb(false, null, res);

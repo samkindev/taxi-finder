@@ -3,9 +3,8 @@ import { Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import TaxiCard from './TaxiCard';
 
-export default function TaxiList({ itineraire, setTaxi }) {
+export default function TaxiList() {
     const [taxis, setTaxis] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     const classes = useStyles();
     return (

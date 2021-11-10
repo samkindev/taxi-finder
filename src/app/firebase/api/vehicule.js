@@ -27,6 +27,18 @@ export const createVehicule = async (data, cb) => {
     }
 };
 
+export const updateVehiculeItineraire = async (vehiculeId, cb, depart, terminus) => {
+    try {
+        cb(true, null, 0);
+        const vRef = doc(db, "vehicules", vehiculeId);
+        await updateDoc(vRef.withConverter(models.vehiculeConverter), { depart, terminus });
+
+        cb(false, null, 1);
+    } catch (err) {
+        cb(false, err.message, null);        
+    }
+}
+
 export const updateVehiculeLocation = async (vehiculeId, position, cb) => {
     try {
         cb(true, null, 0);
@@ -56,5 +68,20 @@ export const getCommandVehicle = async (itineraire, cb) => {
         }
     } catch (error) {
         cb(false, error.message);
+    }
+};
+
+export const getSingleVehicule = async (vehiculeId, cb) => {
+    try {
+        cb(true);
+        const vRef = doc(db, "vehicules", vehiculeId);
+        const v = await getDoc(vRef);
+
+        cb(false, null, {
+            id: v.id,
+            ...v.data()
+        })
+    } catch (err) {
+        cb(false, err.message);
     }
 };

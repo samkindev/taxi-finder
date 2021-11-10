@@ -47,6 +47,7 @@ class Vehicule {
         this.depart = depart;
         this.terminus = terminus;
         this.position = position;
+        this.disponible = false;
     }
 }
 
@@ -83,10 +84,11 @@ class Arret {
  */
 
 class Commande {
-    constructor(client, taxi, arret, etat, createdAt) {
+    constructor(client, taxi, depart, arret, etat, createdAt) {
         this.client = client;
         this.taxi = taxi;
         this.arret = arret;
+        this.depart = depart;
         this.etat = etat;
         this.createdAt = createdAt;
     }
@@ -143,6 +145,7 @@ const vehiculeConverter = {
             depart: c.depart,
             terminus: c.terminus,
             position: c.position,
+            disponible: c.disponible,
             createdAt: firebase.createdAt()
         };
     },
@@ -151,8 +154,6 @@ const vehiculeConverter = {
         return new Vehicule(data.chauffeurId, data.nomChauffeur, data.type, data.marque, data.couleur, data.plaque, data.itineraireId, data.depart, data.terminus, data.position);
     }
 };
-
-
 
 const itineraireConverter = {
     toFirestore: (v) => {
@@ -189,13 +190,14 @@ const commadeConverter = {
             client: v.client,
             taxi: v.taxi,
             arret: v.arret,
+            depart: v.depart,
             etat: v.etat,
             createdAt: firebase.createdAt()
         };
     },
     fromFirestore: (snapShot, options) => {
         const data = snapShot.data(options);
-        return new Commande(data.client, data.taxi, data.arret, data.etat, data.createdAt);
+        return new Commande(data.client, data.taxi, data.depart, data.arret, data.etat, data.createdAt);
     }
 };
 

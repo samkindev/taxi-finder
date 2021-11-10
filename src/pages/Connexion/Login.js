@@ -2,14 +2,13 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { LoginForm } from '../../components';
 import { makeStyles } from '@mui/styles';
-import { Box, CircularProgress, Fade, Typography } from '@mui/material';
-import { getUser, getLoadingState } from '../../app/reducers/user';
+import { Box, CircularProgress, Fade } from '@mui/material';
+import { getLoadingState } from '../../app/reducers/user';
 import globalStyles from '../../styles/globalStyles';
 import { Link } from 'react-router-dom';
 import { Logo } from '../../components';
 
 export default function Login() {
-    const user = useSelector(getUser);
     const loading = useSelector(getLoadingState);
 
     const globalClasses = globalStyles();

@@ -4,7 +4,6 @@ import { makeStyles } from '@mui/styles';
 
 export default function TaxiCard({ taxi = {}, onClick }) {
     const classes = useStyles();
-    console.log(taxi);
     return (
         <ButtonBase onClick={onClick} className={classes.root} sx={{ padding: "5px 20px", width: '100%', justifyContent: 'flex-start', textAlign: 'start' }}>
             <Avatar className={classes.avatar}></Avatar>

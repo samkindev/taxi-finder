@@ -33,8 +33,8 @@ export const getItineraireTaxis = async (itineraire, arret, cb) => {
             collectionGroup(
                 db, "vehicules"
             ),
-            where("depart", "==", itineraire.depart),
-            where("terminus", "==", itineraire.terminus)
+            where("depart", "==", itineraire.extremite[0]),
+            where("terminus", "==", itineraire.extremite[1])
         ).withConverter(models.vehiculeConverter); //query(collection(db, "chauffeurs"));
         const vDocs = (await getDocs(q)).docs;
 

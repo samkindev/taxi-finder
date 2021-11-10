@@ -14,7 +14,7 @@ export default function ClientAppBar() {
     const handleDeconnection = () => {
         logoutUser((l, err, res) => {
             setDeconnecting(l);
-            console.log(res);
+
             if (err) {
                 console.log(err);
                 return;
