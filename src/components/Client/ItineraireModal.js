@@ -69,8 +69,8 @@ export default function ItineraireModal({ open, onClose, setDestination, goToCli
     return (
         <Modal
             open={open}
-            onBackdropClick={onClose}
-            onClose={onClose}
+            // onBackdropClick={onClose}
+            // onClose={onClose}
             BackdropProps={{
                 style: {
                     backgroundColor: "rgb(0 0 0 / 48%)",

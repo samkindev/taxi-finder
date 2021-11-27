@@ -12,6 +12,7 @@ export default function Map({ taxiPosition }) {
         bearing: 0,
         pitch: 50
     });
+
     const [settings, setSettings] = useState({
         dragPan: true,
         dragRotate: true,

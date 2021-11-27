@@ -38,7 +38,7 @@ export default function LandingPage() {
 
     const handleGoToDriver = () => {
         if (user) {
-            history.push("/conducteur/1");
+            history.push("/conducteur/" + user.id);
         } else {
             goToLogin();
         }
@@ -55,7 +55,7 @@ export default function LandingPage() {
                     <div className={clsx(classes.hero, globalClasses.centerFlex)}>
                         <div className={classes.heroContent}>
                             <Typography variant="title" component="h1" sx={{ lineHeight: 1.1, maxWidth: 800 }} className={classes.title}>Changez votre façon de vous déplacer</Typography>
-                            <Typography variant="body1" className={classes.text1} style={{ color: 'inherit' }}>Conduisez en securité et gangez de l'argent.<br />Trouvez votre transport rapidement et gagnez du temps.</Typography>
+                            <Typography variant="body1" className={classes.text1} style={{ color: 'inherit' }}>Conduisez en securité et gagnez de l'argent.<br />Trouvez votre transport rapidement et gagnez du temps.</Typography>
                             <div className={clsx(globalClasses.centerFlex, classes.heroActions)} style={{ width: '100%' }}>
                                 <Button
                                     variant="contained"

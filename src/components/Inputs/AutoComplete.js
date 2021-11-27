@@ -12,7 +12,10 @@ export default function AutocompleteInput({ options, onChange, value, id, placeh
             op => {
                 if (op.nom && text !== "") {
                     return op.nom.indexOf(text) !== -1
-                }                
+                } else if (op && text !== "") {
+                    return op.indexOf(text) !== -1
+                }
+
                 return false;
             }
         );
@@ -28,7 +31,7 @@ export default function AutocompleteInput({ options, onChange, value, id, placeh
                 setText(e.target.value);
             }}
             options={options}
-            getOptionLabel={(option) => option.nom}
+            getOptionLabel={(option) => option.nom ? option.nom : option}
             renderInput={(params) => (
                 <TextField {...params}
                     value={text}
@@ -37,8 +40,8 @@ export default function AutocompleteInput({ options, onChange, value, id, placeh
                     color="default" margin="normal" />
             )}
             renderOption={(props, option, { inputValue }) => {
-                const matches = match(option.nom, inputValue);
-                const parts = parse(option.nom, matches);
+                const matches = match(option.nom ? option.nom : option, inputValue);
+                const parts = parse(option.nom ? option.nom : option, matches);
 
                 return (
                     <li {...props}>

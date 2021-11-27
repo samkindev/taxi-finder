@@ -21,7 +21,7 @@ export default function LoginForm() {
                 setLoading(l);
 
                 if (err) {
-                    setError(err);
+                    setError("Une erreur s'est produite lors de l'envoie de la requête.");
                     return;
                 }
 
@@ -40,7 +40,7 @@ export default function LoginForm() {
     const classes = useStyles(theme)();
     return (
         <form className={classes.form}>
-            <Typography variant="h1" className={classes.title}>Connectez vous</Typography>
+            <Typography variant="h1" className={classes.title}>Connexion à votre compte</Typography>
             {error && <Alert severity="error" color="error" sx={{ margin: '10px 0' }}>{error}</Alert>}
             <TextField
                 name="email"
@@ -77,7 +77,7 @@ export default function LoginForm() {
                 disableElevation
                 disabled={loading}
             >
-                Connecter
+                Connexion
                 {loading && <CircularProgress color="inherit" size={10} style={{ marginLeft: 10 }} />}
             </Button>
             <div className={clsx(globalClasses.centerFlex)} style={{ padding: '20px 0' }}>

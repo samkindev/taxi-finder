@@ -48,7 +48,7 @@ export default function NewCommand({ open, onClose, command }) {
                 <div className={clsx(globalClasses.centerFlex, classes.contentContainer)}>
                     <Box display="flex" flexDirection="column" alignItems="center">
                         <Avatar style={{ width: 80, height: 80, marginBottom: 10 }} />
-                        <Typography variant="caption">Arret {command.arret}</Typography>
+                        <Typography variant="caption">Arrêt {command.arret}</Typography>
                     </Box>
                     <Typography variant="h4" sx={{ fontWeight: 500 }}>{driver.depart} - {driver.terminus}</Typography>
                     <Typography variant="caption" style={{ textAlign: 'center' }}>...</Typography>
